@@ -170,9 +170,48 @@ LIMIT 1;
 
 -- 6a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
 
+SELECT drug_name, SUM(total_claim_count) AS total_claims
+FROM prescription
+INNER JOIN drug
+USING(drug_name)
+GROUP BY drug_name
+HAVING SUM(total_claim_count) >= 3000
+ORDER BY total_claims DESC;
+
+SELECT drug_name, SUM(total_claim_count) AS total_claims
+FROM prescription
+GROUP BY drug_name
+HAVING SUM(total_claim_count) >= 3000
+ORDER BY total_claims DESC;
+
+-- Total rows of 507 with "HYDROCODONE-ACETAMINOPHEN" as the drug with most claims at 1,123,360. 
+
 -- 6b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
+SELECT drug_name, SUM(total_claim_count) AS total_claims, 
+	CASE WHEN opioid_drug_flag = 'Y' THEN 'Y'
+	END AS opioid
+FROM prescription
+LEFT JOIN drug
+USING(drug_name)
+GROUP BY drug_name, opioid
+HAVING SUM(total_claim_count) >= 3000
+ORDER BY total_claims DESC;
+
 -- 6c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
+
+SELECT drug_name, SUM(total_claim_count) AS total_claims, 
+	CASE WHEN opioid_drug_flag = 'Y' THEN 'Y'
+	END AS opioid,
+	nppes_provider_first_name AS dr_first_name, nppes_provider_last_org_name AS dr_last_name
+FROM prescription
+LEFT JOIN drug
+USING(drug_name)
+LEFT JOIN prescriber
+USING(npi)
+GROUP BY drug_name, opioid, dr_first_name, dr_last_name
+HAVING SUM(total_claim_count) >= 3000
+ORDER BY total_claims DESC;
 
 -- 7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and 
 -- the number of claims they had for each opioid. Hint: The results from all 3 parts will have 637 rows.
@@ -180,6 +219,9 @@ LIMIT 1;
 -- 7a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) 
 -- in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). 
 -- Warning: Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+
+
+
 
 -- 7b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. 
 -- You should report the npi, the drug name, and the number of claims (total_claim_count).
