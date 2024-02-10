@@ -220,11 +220,53 @@ ORDER BY total_claims DESC;
 -- in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). 
 -- Warning: Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
 
+SELECT npi, drug_name, specialty_description AS specialty, nppes_provider_city AS provider_city, 
+	CASE WHEN drug.opioid_drug_flag = 'Y' THEN 'opioid' END AS drug_type
+FROM prescriber
+INNER JOIN prescription
+USING(npi)
+INNER JOIN drug
+USING(drug_name)
+WHERE specialty_description = 'Pain Management' 
+	AND nppes_provider_city = 'NASHVILLE'
+	AND drug.opioid_drug_flag = 'Y'
+GROUP BY 1, 2, 3, 4, 5
 
+
+SELECT nppes_provider_first_name AS first_name, nppes_provider_last_org_name AS last_name,
+	specialty_description AS specialty, nppes_provider_city AS provider_city, 
+	CASE WHEN drug.opioid_drug_flag = 'Y' THEN 'opioid' END AS drug_type
+FROM prescriber
+INNER JOIN drug
+WHERE specialty_description = 'Pain Management' 
+	AND nppes_provider_city = 'NASHVILLE'
+	AND drug.opioid_drug_flag = 'Y'
+GROUP BY 1, 2, 3, 4, 5
+
+SELECT nppes_provider_first_name AS first_name, nppes_provider_last_org_name AS last_name, npi, drug_name,
+	specialty_description AS specialty, nppes_provider_city AS provider_city
+FROM prescriber
+INNER JOIN prescription
+USING(npi)
+WHERE specialty_description = 'Pain Management' 
+	AND nppes_provider_city = 'NASHVILLE'
+GROUP BY 1, 2, 3, 4, 5, 6
 
 
 -- 7b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. 
 -- You should report the npi, the drug name, and the number of claims (total_claim_count).
+
+SELECT npi, drug_name, nppes_provider_first_name AS first_name, nppes_provider_last_org_name AS last_name, 
+	SUM(total_claim_count) AS total_claims
+FROM prescriber
+INNER JOIN prescription
+USING(npi)
+INNER JOIN drug
+USING(drug_name)
+WHERE specialty_description = 'Pain Management' 
+	AND nppes_provider_city = 'NASHVILLE'
+	AND drug.opioid_drug_flag = 'Y'
+GROUP BY 1, 2, 3, 4
 
 -- 7c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. 
 -- Hint - Google the COALESCE function.
